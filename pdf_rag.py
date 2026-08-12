@@ -70,6 +70,9 @@ chroma_client = chromadb.PersistentClient(
 collection = chroma_client.get_or_create_collection(
     name="pdf_knowledge"
 )
+collection.delete(
+    where={}
+)
 
 
 # -------------------------
