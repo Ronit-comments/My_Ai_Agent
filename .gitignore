@@ -1,6 +1,8 @@
 .env
+agent_memory.db
 venv/
 chroma_db/
 pdf_chroma_db/
 __pycache__/
 documents/
+memory_chroma_db/
