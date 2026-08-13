@@ -40,4 +40,32 @@ def search_semantic_memory(query, n_results=3):
     if not results["documents"]:
         return []
 
-    return results["documents"][0]
+    memories = []
+
+    for memory_id, document in zip(
+        results["ids"][0],
+        results["documents"][0]
+    ):
+
+        memories.append({
+            "id": memory_id,
+            "memory": document
+        })
+
+    return memories
+
+def delete_semantic_memory(memory_id):
+
+    collection.delete(
+        ids=[memory_id]
+    )
+
+def update_semantic_memory(
+    memory_id,
+    new_memory
+):
+
+    collection.upsert(
+        ids=[memory_id],
+        documents=[new_memory]
+    )

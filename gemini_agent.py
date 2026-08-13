@@ -4,28 +4,26 @@ from dotenv import load_dotenv
 import os
 import uuid
 
+from memory_extractor import analyze_memory
+
 from semantic_memory import (
     save_semantic_memory,
     search_semantic_memory
 )
 
-# Short-term memory
 from memory import (
     add_message,
     get_recent_memory
 )
 
-# Long-term memory
 from long_term_memory import (
     create_table,
     save_memory,
     get_memories
 )
 
-# Context manager
 from context_manager import build_context
 
-# Tools
 from tools import (
     add,
     subtract,
@@ -99,10 +97,7 @@ while True:
 
         break
 
-    semantic_memories = search_semantic_memory(
-    user_input,
-    n_results=3
-)
+
     # ----------------------------------------------
     # Get short-term memory
     # ----------------------------------------------
@@ -120,20 +115,26 @@ while True:
         limit=10
     )
 
+
+    # ----------------------------------------------
+    # Get semantic memory
+    # ----------------------------------------------
+
     semantic_memories = search_semantic_memory(
-    user_input,
-    n_results=3
-)
+        user_input,
+        n_results=3
+    )
+
 
     # ----------------------------------------------
     # Build context
     # ----------------------------------------------
 
     context = build_context(
-    recent_messages,
-    long_term_memories,
-    semantic_memories
-)
+        recent_messages,
+        long_term_memories,
+        semantic_memories
+    )
 
 
     # ----------------------------------------------
@@ -151,16 +152,13 @@ Available tools include:
 - PDF search
 - Conversation memory
 
-
 Here is the conversation context:
 
 {context}
 
-
 Current user request:
 
 {user_input}
-
 
 Instructions:
 
@@ -226,12 +224,35 @@ Instructions:
             answer
         )
 
-        memory_id = f"memory_{len(get_memories(limit=100000)) + 1}"
-        memory_id = str(uuid.uuid4())
-        save_semantic_memory(
-        memory_id,
-        user_input
-    )
+
+        # ------------------------------------------
+        # Analyze memory importance
+        # ------------------------------------------
+
+        memory_result = analyze_memory(
+            user_input
+        )
+
+
+        # ------------------------------------------
+        # Save important semantic memory
+        # ------------------------------------------
+
+        if memory_result["remember"]:
+
+            memory_id = str(uuid.uuid4())
+
+            memory_text = memory_result["memory"]
+
+            save_semantic_memory(
+                memory_id,
+                memory_text
+            )
+
+            print(
+                "💾 Important information remembered."
+            )
+
 
         # ------------------------------------------
         # Display response
