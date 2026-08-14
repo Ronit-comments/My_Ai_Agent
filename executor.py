@@ -7,10 +7,10 @@ from tools import (
     divide
 )
 
+from result_resolver import (
+    resolve_arguments
+)
 
-# ==========================================
-# TOOL REGISTRY
-# ==========================================
 
 TOOL_REGISTRY = {
 
@@ -20,12 +20,9 @@ TOOL_REGISTRY = {
     "subtract": subtract,
     "multiply": multiply,
     "divide": divide
+
 }
 
-
-# ==========================================
-# EXECUTE TASK
-# ==========================================
 
 def execute_task(task, state):
 
@@ -37,32 +34,40 @@ def execute_task(task, state):
     )
 
 
-    # --------------------------------------
+    # --------------------------------
     # Final answer
-    # --------------------------------------
+    # --------------------------------
 
     if action == "answer":
 
         return None
 
 
-    # --------------------------------------
+    # --------------------------------
+    # Resolve references
+    # --------------------------------
+
+    arguments = resolve_arguments(
+        arguments,
+        state
+    )
+
+
+    # --------------------------------
     # Find tool
-    # --------------------------------------
+    # --------------------------------
 
     tool = TOOL_REGISTRY.get(action)
 
 
     if tool is None:
 
-        return (
-            f"Unknown action: {action}"
-        )
+        return f"Unknown action: {action}"
 
 
-    # --------------------------------------
-    # Execute tool
-    # --------------------------------------
+    # --------------------------------
+    # Execute
+    # --------------------------------
 
     try:
 

@@ -1,6 +1,6 @@
 from planner import create_plan
 
-request = "search my ml pdf for decision trees"
+request = "add 5 and 10, then multiply the result by 2, and finally subtract 3"
 
 plan = create_plan(request)
 
