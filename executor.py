@@ -1,5 +1,3 @@
-from json import tool
-
 from pdf_tool import search_pdf
 
 from tools import (
@@ -9,24 +7,7 @@ from tools import (
     divide
 )
 
-def resolve_input(value, state):
 
-    if isinstance(value, str):
-
-        if value.startswith("$step"):
-
-            step_number = int(
-                value.replace("$step", "")
-            )
-
-            for result in state.get_results():
-
-                if result["step"] == step_number:
-
-                    return result["result"]
-
-
-    return value
 # ==========================================
 # TOOL REGISTRY
 # ==========================================
@@ -50,14 +31,14 @@ def execute_task(task, state):
 
     action = task["action"]
 
-    task_input = task.get(
-        "input",
-        ""
+    arguments = task.get(
+        "arguments",
+        {}
     )
 
 
     # --------------------------------------
-    # Final answer task
+    # Final answer
     # --------------------------------------
 
     if action == "answer":
@@ -85,15 +66,23 @@ def execute_task(task, state):
 
     try:
 
-        result = tool(task_input)
+        result = tool(
+            **arguments
+        )
+
 
         state.add_result(
             step=task["step"],
             action=action,
             result=result
         )
+
+
         return result
+
 
     except Exception as e:
 
-        return f"Tool execution failed: {e}"
+        return (
+            f"Tool execution failed: {e}"
+        )

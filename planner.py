@@ -1,67 +1,109 @@
 from google import genai
 from dotenv import load_dotenv
-import json
 import os
+import json
+
+
+# --------------------------------
+# Gemini setup
+# --------------------------------
 
 load_dotenv()
 
-api_key =os.getenv("GEMINI_API_KEY")
+api_key = os.getenv("GEMINI_API_KEY")
 
 if not api_key:
     raise ValueError(
         "GEMINI_API_KEY was not found in .env"
     )
 
-client = genai.client(api_key=api_key)
+client = genai.Client(
+    api_key=api_key
+)
+
+
+# --------------------------------
+# Create plan
+# --------------------------------
 
 def create_plan(user_input):
-    """Create a plan based on the user's input using the Gemini API."""
-    
+
     prompt = f"""
 You are the planning system of a personal AI agent.
 
-Break the user's request into a sequence of
-small executable tasks.
+Break the user's request into small executable tasks.
 
 Available actions:
 
 - search_pdf
-- calculate
-- remember
+- add
+- subtract
+- multiply
+- divide
 - answer
 
 Rules:
 
-1. Create only the tasks that are necessary.
+1. Create only necessary tasks.
 2. Put tasks in the correct order.
-3. If a calculation is required, use "calculate".
-4. If information from a PDF is required, use "search_pdf".
-5. The final task should normally be "answer".
-6. Return ONLY valid JSON.
+3. Use structured arguments.
+4. Do not use "calculate".
+5. Use add, subtract, multiply, or divide
+   for mathematical operations.
+6. The final task should normally be "answer".
+7. Return ONLY valid JSON.
 
-Format:
+Examples:
+
+For:
+
+"Calculate 25 times 4"
+
+Return:
+
+{{
+    "tasks": [
+        {{
+            "step": 1,
+            "action": "multiply",
+            "arguments": {{
+                "a": 25,
+                "b": 4
+            }}
+        }},
+        {{
+            "step": 2,
+            "action": "answer",
+            "arguments": {{}}
+        }}
+    ]
+}}
+
+For:
+
+"Search my PDF for decision trees"
+
+Return:
 
 {{
     "tasks": [
         {{
             "step": 1,
             "action": "search_pdf",
-            "input": "topic"
+            "arguments": {{
+                "query": "decision trees"
+            }}
         }},
         {{
             "step": 2,
-            "action": "calculate",
-            "input": "25 * 4"
-        }},
-        {{
-            "step": 3,
             "action": "answer",
-            "input": ""
+            "arguments": {{}}
         }}
     ]
 }}
 
 User request:
+
 {user_input}
 """
 
@@ -70,13 +112,14 @@ User request:
         contents=prompt
     )
 
-    plan_text = response.text
-
     try:
-        plan_json = json.loads(plan_text)
-    except json.JSONDecodeError:
-        raise ValueError(
-            "The response from the Gemini API is not valid JSON."
-        )
 
-    return plan_json
+        return json.loads(response.text)
+
+    except json.JSONDecodeError:
+
+        print("Planner returned invalid JSON.")
+
+        return {
+            "tasks": []
+        }
