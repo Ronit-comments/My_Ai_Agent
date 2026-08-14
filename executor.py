@@ -1,5 +1,7 @@
 from ast import arguments
 
+from computer_tools import open_application
+
 from pdf_tool import search_pdf
 
 from tools import (
@@ -15,14 +17,14 @@ from result_resolver import (
 
 
 TOOL_REGISTRY = {
-
     "search_pdf": search_pdf,
 
     "add": add,
     "subtract": subtract,
     "multiply": multiply,
-    "divide": divide
+    "divide": divide,
 
+    "open_application": open_application
 }
 
 
