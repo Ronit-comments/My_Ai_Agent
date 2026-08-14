@@ -1,3 +1,5 @@
+from ast import arguments
+
 from pdf_tool import search_pdf
 
 from tools import (
@@ -62,7 +64,10 @@ def execute_task(task, state):
 
     if tool is None:
 
-        return f"Unknown action: {action}"
+        return {
+        "success": False,
+        "error": f"Unknown action: {action}"
+    }
 
 
     # --------------------------------
@@ -71,23 +76,22 @@ def execute_task(task, state):
 
     try:
 
-        result = tool(
-            **arguments
-        )
-
+        result = tool(**arguments)
 
         state.add_result(
-            step=task["step"],
-            action=action,
-            result=result
-        )
+        step=task["step"],
+        action=action,
+        result=result
+    )
 
-
-        return result
-
+        return {
+        "success": True,
+        "result": result
+    }
 
     except Exception as e:
 
-        return (
-            f"Tool execution failed: {e}"
-        )
+        return {
+        "success": False,
+        "error": str(e)
+    }
