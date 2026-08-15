@@ -8,6 +8,13 @@ from computer_tools import (
     open_folder,
     open_file
 )
+from file_tools import (
+    create_folder,
+    create_file,
+    read_file,
+    rename_path,
+    move_path
+)
 from pdf_tool import search_pdf
 
 from tools import (
@@ -24,19 +31,27 @@ from result_resolver import (
 
 TOOL_REGISTRY = {
 
-    # Existing tools
-    "search_pdf": search_pdf,
-
+    # Calculator
     "add": add,
     "subtract": subtract,
     "multiply": multiply,
     "divide": divide,
 
-    # Computer tools
+    # PDF
+    "search_pdf": search_pdf,
+
+    # Computer
     "open_application": open_application,
     "open_website": open_website,
     "open_folder": open_folder,
-    "open_file": open_file
+    "open_file": open_file,
+
+    # File system
+    "create_folder": create_folder,
+    "create_file": create_file,
+    "read_file": read_file,
+    "rename_path": rename_path,
+    "move_path": move_path
 }
 
 
