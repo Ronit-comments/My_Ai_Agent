@@ -2,6 +2,12 @@ from ast import arguments
 
 from computer_tools import open_application
 
+from computer_tools import (
+    open_application,
+    open_website,
+    open_folder,
+    open_file
+)
 from pdf_tool import search_pdf
 
 from tools import (
@@ -17,6 +23,8 @@ from result_resolver import (
 
 
 TOOL_REGISTRY = {
+
+    # Existing tools
     "search_pdf": search_pdf,
 
     "add": add,
@@ -24,7 +32,11 @@ TOOL_REGISTRY = {
     "multiply": multiply,
     "divide": divide,
 
-    "open_application": open_application
+    # Computer tools
+    "open_application": open_application,
+    "open_website": open_website,
+    "open_folder": open_folder,
+    "open_file": open_file
 }
 
 

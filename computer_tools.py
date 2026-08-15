@@ -3,25 +3,19 @@ import subprocess
 
 def open_application(application):
 
+    application = application.lower().strip()
+
     applications = {
-
         "chrome": "chrome",
-
         "vscode": "code",
-
         "notepad": "notepad",
-
         "calculator": "calc",
-
         "explorer": "explorer"
-
     }
 
-    app = applications.get(
-        application.lower()
-    )
+    target = applications.get(application)
 
-    if app is None:
+    if target is None:
 
         return {
             "success": False,
@@ -30,7 +24,10 @@ def open_application(application):
 
     try:
 
-        subprocess.Popen(app)
+        subprocess.Popen(
+            ["cmd", "/c", "start", "", target],
+            shell=False
+        )
 
         return {
             "success": True,
