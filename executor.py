@@ -4,9 +4,6 @@ from computer_tools import open_application
 
 from computer_tools import (
     open_application,
-    open_website,
-    open_folder,
-    open_file
 )
 from file_tools import (
     create_folder,
@@ -16,6 +13,11 @@ from file_tools import (
     move_path
 )
 from pdf_tool import search_pdf
+
+from web_tools import (
+    open_website,
+    search_web
+)
 
 from tools import (
     add,
@@ -27,7 +29,13 @@ from tools import (
 from result_resolver import (
     resolve_arguments
 )
-
+from input_tools import (
+    move_mouse,
+    click_mouse,
+    type_text,
+    press_key,
+    scroll
+)
 
 TOOL_REGISTRY = {
 
@@ -42,16 +50,23 @@ TOOL_REGISTRY = {
 
     # Computer
     "open_application": open_application,
-    "open_website": open_website,
-    "open_folder": open_folder,
-    "open_file": open_file,
 
-    # File system
+    # Files
     "create_folder": create_folder,
     "create_file": create_file,
     "read_file": read_file,
     "rename_path": rename_path,
-    "move_path": move_path
+    "move_path": move_path,
+
+    # Web
+    "search_web": search_web,
+    "open_website": open_website,
+
+    "move_mouse": move_mouse,
+    "click_mouse": click_mouse,
+    "type_text": type_text,
+    "press_key": press_key,
+    "scroll": scroll,
 }
 
 
