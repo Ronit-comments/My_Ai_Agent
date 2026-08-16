@@ -1,10 +1,26 @@
-from ast import arguments
+# ==========================================
+# SECURITY
+# ==========================================
 
-from computer_tools import open_application
+from security import (
+    is_action_allowed,
+    needs_confirmation
+)
+
+
+# ==========================================
+# COMPUTER TOOLS
+# ==========================================
 
 from computer_tools import (
-    open_application,
+    open_application
 )
+
+
+# ==========================================
+# FILE TOOLS
+# ==========================================
+
 from file_tools import (
     create_folder,
     create_file,
@@ -12,12 +28,30 @@ from file_tools import (
     rename_path,
     move_path
 )
-from pdf_tool import search_pdf
+
+
+# ==========================================
+# PDF TOOLS
+# ==========================================
+
+from pdf_tool import (
+    search_pdf
+)
+
+
+# ==========================================
+# WEB TOOLS
+# ==========================================
 
 from web_tools import (
     open_website,
     search_web
 )
+
+
+# ==========================================
+# CALCULATOR TOOLS
+# ==========================================
 
 from tools import (
     add,
@@ -26,9 +60,11 @@ from tools import (
     divide
 )
 
-from result_resolver import (
-    resolve_arguments
-)
+
+# ==========================================
+# INPUT TOOLS
+# ==========================================
+
 from input_tools import (
     move_mouse,
     click_mouse,
@@ -36,6 +72,20 @@ from input_tools import (
     press_key,
     scroll
 )
+
+
+# ==========================================
+# RESULT RESOLVER
+# ==========================================
+
+from result_resolver import (
+    resolve_arguments
+)
+
+
+# ==========================================
+# TOOL REGISTRY
+# ==========================================
 
 TOOL_REGISTRY = {
 
@@ -62,6 +112,7 @@ TOOL_REGISTRY = {
     "search_web": search_web,
     "open_website": open_website,
 
+    # Mouse / Keyboard
     "move_mouse": move_mouse,
     "click_mouse": click_mouse,
     "type_text": type_text,
@@ -70,31 +121,179 @@ TOOL_REGISTRY = {
 }
 
 
-def execute_task(task, state=None):
+# ==========================================
+# USER CONFIRMATION
+# ==========================================
 
-    action = task.get("action")
-    arguments = task.get("arguments", {})
+def request_confirmation(action, arguments):
 
-    # ------------------------------------------
-    # Normalize arguments
-    # ------------------------------------------
+    print("\n⚠️ ACTION REQUIRES CONFIRMATION")
+
+    print(f"Action: {action}")
+
+    print(f"Arguments: {arguments}")
+
+    answer = input(
+        "\nAllow this action? (yes/no): "
+    )
+
+    return answer.lower().strip() == "yes"
+
+
+# ==========================================
+# NORMALIZE ARGUMENTS
+# ==========================================
+
+def normalize_arguments(action, arguments):
 
     if not isinstance(arguments, dict):
+
         return {
             "success": False,
             "error": "Arguments must be a dictionary."
         }
 
-    # Gemini sometimes uses "name" instead of
-    # the expected parameter name "application"
+
+    # --------------------------------------
+    # open_application
+    # --------------------------------------
+
     if action == "open_application":
 
-        if "application" not in arguments and "name" in arguments:
-            arguments["application"] = arguments.pop("name")
+        if "application" not in arguments:
 
-    # ------------------------------------------
-    # Check action
-    # ------------------------------------------
+            if "name" in arguments:
+
+                arguments["application"] = arguments.pop(
+                "name"
+            )
+
+        elif "app" in arguments:
+
+            arguments["application"] = arguments.pop(
+                "app"
+            )
+
+        elif "app_name" in arguments:
+
+            arguments["application"] = arguments.pop(
+                "app_name"
+            )
+
+
+    # --------------------------------------
+    # open_website
+    # --------------------------------------
+
+    elif action == "open_website":
+
+        if (
+            "url" not in arguments
+            and "website" in arguments
+        ):
+
+            arguments["url"] = arguments.pop(
+                "website"
+            )
+
+        elif (
+            "url" not in arguments
+            and "link" in arguments
+        ):
+
+            arguments["url"] = arguments.pop(
+                "link"
+            )
+
+
+    # --------------------------------------
+    # type_text
+    # --------------------------------------
+
+    elif action == "type_text":
+
+        if (
+            "text" not in arguments
+            and "content" in arguments
+        ):
+
+            arguments["text"] = arguments.pop(
+                "content"
+            )
+
+        elif (
+            "text" not in arguments
+            and "message" in arguments
+        ):
+
+            arguments["text"] = arguments.pop(
+                "message"
+            )
+
+
+    return {
+        "success": True,
+        "arguments": arguments
+    }
+
+
+# ==========================================
+# EXECUTE TASK
+# ==========================================
+
+def execute_task(task, state=None):
+
+    # --------------------------------------
+    # Validate task
+    # --------------------------------------
+
+    if not isinstance(task, dict):
+
+        return {
+            "success": False,
+            "error": "Task must be a dictionary."
+        }
+
+
+    # --------------------------------------
+    # Get action
+    # --------------------------------------
+
+    action = task.get("action")
+
+    arguments = task.get(
+        "arguments",
+        {}
+    )
+
+
+    # --------------------------------------
+    # Check action exists
+    # --------------------------------------
+
+    if not action:
+
+        return {
+            "success": False,
+            "error": "No action was provided."
+        }
+
+
+    # --------------------------------------
+    # DONE
+    # --------------------------------------
+
+    if action == "done":
+
+        return {
+            "success": True,
+            "message": "Task completed."
+        }
+
+
+    # --------------------------------------
+    # Check action exists in registry
+    # --------------------------------------
 
     if action not in TOOL_REGISTRY:
 
@@ -103,9 +302,57 @@ def execute_task(task, state=None):
             "error": f"Unknown action: {action}"
         }
 
-    # ------------------------------------------
-    # Execute tool
-    # ------------------------------------------
+
+    # --------------------------------------
+    # Normalize arguments
+    # --------------------------------------
+
+    normalized = normalize_arguments(
+        action,
+        arguments
+    )
+
+
+    if not normalized["success"]:
+
+        return normalized
+
+
+    arguments = normalized["arguments"]
+
+
+    # --------------------------------------
+    # SECURITY CHECK
+    # --------------------------------------
+
+    if needs_confirmation(action):
+
+        approved = request_confirmation(
+            action,
+            arguments
+        )
+
+        if not approved:
+
+            return {
+                "success": False,
+                "error": "User denied the action."
+            }
+
+    elif not is_action_allowed(action):
+
+        return {
+            "success": False,
+            "error": (
+                f"Action '{action}' "
+                "is not allowed."
+            )
+        }
+
+
+    # --------------------------------------
+    # EXECUTE TOOL
+    # --------------------------------------
 
     try:
 
@@ -113,14 +360,52 @@ def execute_task(task, state=None):
 
         result = tool(**arguments)
 
-        return result
+
+        # ----------------------------------
+        # Normalize tool result
+        # ----------------------------------
+
+        if isinstance(result, bool):
+
+            return {
+                "success": result,
+                "message": (
+                    "Action executed successfully."
+                    if result
+                    else "Action failed."
+                )
+            }
+
+
+        if isinstance(result, dict):
+
+            return result
+
+
+        return {
+            "success": True,
+            "result": result
+        }
+
+
+    # --------------------------------------
+    # Invalid arguments
+    # --------------------------------------
 
     except TypeError as e:
 
         return {
             "success": False,
-            "error": f"Invalid arguments for {action}: {str(e)}"
+            "error": (
+                f"Invalid arguments for "
+                f"{action}: {str(e)}"
+            )
         }
+
+
+    # --------------------------------------
+    # Other errors
+    # --------------------------------------
 
     except Exception as e:
 

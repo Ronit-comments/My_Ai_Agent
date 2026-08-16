@@ -1,5 +1,3 @@
-from urllib import response
-
 from screen_tools import take_screenshot
 from vision import analyze_screen
 
@@ -22,6 +20,7 @@ def observe():
     screenshot_result = take_screenshot()
 
     if not screenshot_result["success"]:
+
         return {
             "success": False,
             "error": screenshot_result["error"]
@@ -49,6 +48,26 @@ def execute_action(task):
         task,
         state
     )
+
+    # Normalize result
+
+    if isinstance(result, bool):
+
+        result = {
+            "success": result,
+            "message": (
+                "Action executed successfully."
+                if result
+                else "Action failed."
+            )
+        }
+
+    elif not isinstance(result, dict):
+
+        result = {
+            "success": False,
+            "error": f"Unexpected executor result: {result}"
+        }
 
     print("\nResult:")
     print(result)
@@ -114,20 +133,12 @@ Otherwise return:
 
     text = response.text.strip()
 
-    # ------------------------------------------
-    # Remove Markdown code fences
-    # ------------------------------------------
-
     if text.startswith("```"):
 
         text = text.replace("```json", "")
         text = text.replace("```", "")
 
         text = text.strip()
-
-    # ------------------------------------------
-    # Convert JSON text into Python dictionary
-    # ------------------------------------------
 
     try:
 
@@ -145,7 +156,8 @@ Otherwise return:
             "arguments": {},
             "message": text
         }
-    
+
+
 def run_computer_loop(user_request):
 
     max_steps = 10
@@ -157,6 +169,7 @@ def run_computer_loop(user_request):
         )
 
         # 1. Observe
+
         observation = observe()
 
         if not observation["success"]:
@@ -166,6 +179,7 @@ def run_computer_loop(user_request):
             break
 
         # 2. Think
+
         action = decide_action(
             user_request,
             observation["description"]
@@ -175,6 +189,7 @@ def run_computer_loop(user_request):
         print(action)
 
         # 3. Check if finished
+
         if action.get("action") == "done":
 
             print("\n✅ Task completed.")
@@ -182,6 +197,7 @@ def run_computer_loop(user_request):
             break
 
         # 4. Execute
+
         task = {
             "step": step + 1,
             "action": action["action"],
@@ -194,6 +210,7 @@ def run_computer_loop(user_request):
         result = execute_action(task)
 
         # 5. Stop if execution failed
+
         if not result.get("success", False):
 
             print(
@@ -201,3 +218,9 @@ def run_computer_loop(user_request):
             )
 
             break
+
+    else:
+
+        print(
+            "\n⚠️ Maximum number of steps reached."
+        )
