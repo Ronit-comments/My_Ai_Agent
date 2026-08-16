@@ -70,72 +70,61 @@ TOOL_REGISTRY = {
 }
 
 
-def execute_task(task, state):
+def execute_task(task, state=None):
 
-    action = task["action"]
+    action = task.get("action")
+    arguments = task.get("arguments", {})
 
-    arguments = task.get(
-        "arguments",
-        {}
-    )
+    # ------------------------------------------
+    # Normalize arguments
+    # ------------------------------------------
 
+    if not isinstance(arguments, dict):
+        return {
+            "success": False,
+            "error": "Arguments must be a dictionary."
+        }
 
-    # --------------------------------
-    # Final answer
-    # --------------------------------
+    # Gemini sometimes uses "name" instead of
+    # the expected parameter name "application"
+    if action == "open_application":
 
-    if action == "answer":
+        if "application" not in arguments and "name" in arguments:
+            arguments["application"] = arguments.pop("name")
 
-        return None
+    # ------------------------------------------
+    # Check action
+    # ------------------------------------------
 
-
-    # --------------------------------
-    # Resolve references
-    # --------------------------------
-
-    arguments = resolve_arguments(
-        arguments,
-        state
-    )
-
-
-    # --------------------------------
-    # Find tool
-    # --------------------------------
-
-    tool = TOOL_REGISTRY.get(action)
-
-
-    if tool is None:
+    if action not in TOOL_REGISTRY:
 
         return {
-        "success": False,
-        "error": f"Unknown action: {action}"
-    }
+            "success": False,
+            "error": f"Unknown action: {action}"
+        }
 
-
-    # --------------------------------
-    # Execute
-    # --------------------------------
+    # ------------------------------------------
+    # Execute tool
+    # ------------------------------------------
 
     try:
 
+        tool = TOOL_REGISTRY[action]
+
         result = tool(**arguments)
 
-        state.add_result(
-        step=task["step"],
-        action=action,
-        result=result
-    )
+        return result
+
+    except TypeError as e:
 
         return {
-        "success": True,
-        "result": result
-    }
+            "success": False,
+            "error": f"Invalid arguments for {action}: {str(e)}"
+        }
 
     except Exception as e:
 
         return {
-        "success": False,
-        "error": str(e)
-    }
+            "success": False,
+            "error": str(e)
+        }
