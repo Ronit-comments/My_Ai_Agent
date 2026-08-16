@@ -1,6 +1,9 @@
+from unicodedata import category
+
 from agent_router import classify_request
 from computer_loop import run_computer_loop
 from web_agent import run_web_task
+from utility_agent import run_utility_task
 
 from google import genai
 from dotenv import load_dotenv
@@ -97,6 +100,41 @@ def run_friday(user_request):
             )
 
         return
+    
+    # ======================================
+# UTILITY TOOLS
+# ======================================
+
+    if category in [
+    "calculator",
+    "pdf",
+    "file"
+]:
+
+        result = run_utility_task(
+        user_request
+    )
+
+    print("\n🛠️ FRIDAY:")
+
+    if result.get("success", False):
+
+        print(result)
+
+    else:
+
+        print(
+            "❌ Utility task failed:"
+        )
+
+        print(
+            result.get(
+                "error",
+                "Unknown error"
+            )
+        )
+
+    return
 
     # ======================================
     # NORMAL CONVERSATION

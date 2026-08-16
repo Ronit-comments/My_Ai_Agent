@@ -174,10 +174,10 @@ def normalize_arguments(action, arguments):
                 "app"
             )
 
-        elif "app_name" in arguments:
+        elif "application_name" in arguments:
 
             arguments["application"] = arguments.pop(
-                "app_name"
+                "application_name"
             )
 
 
