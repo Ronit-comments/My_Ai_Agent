@@ -1,110 +1,93 @@
+import json
+
 from google import genai
 from dotenv import load_dotenv
 import os
-import json
 
 
-# --------------------------------
-# Gemini setup
-# --------------------------------
+# ==========================================
+# GEMINI SETUP
+# ==========================================
 
 load_dotenv()
 
-api_key = os.getenv("GEMINI_API_KEY")
-
-if not api_key:
-    raise ValueError(
-        "GEMINI_API_KEY was not found in .env"
-    )
-
 client = genai.Client(
-    api_key=api_key
+    api_key=os.getenv("GEMINI_API_KEY")
 )
 
 
-# --------------------------------
-# Create plan
-# --------------------------------
+# ==========================================
+# CREATE PLAN
+# ==========================================
 
-def create_plan(user_input):
+def create_plan(user_request):
 
     prompt = f"""
-You are the planning system of a personal AI agent.
-
-Break the user's request into small executable tasks.
-
-Available actions:
-
-- search_pdf
-- add
-- subtract
-- multiply
-- divide
-- answer
-
-Rules:
-
-1. Create only necessary tasks.
-2. Put tasks in the correct order.
-3. Use structured arguments.
-4. Do not use "calculate".
-5. Use add, subtract, multiply, or divide
-   for mathematical operations.
-6. The final task should normally be "answer".
-7. Return ONLY valid JSON.
-
-Examples:
-
-For:
-
-"Calculate 25 times 4"
-
-Return:
-
-{{
-    "tasks": [
-        {{
-            "step": 1,
-            "action": "multiply",
-            "arguments": {{
-                "a": 25,
-                "b": 4
-            }}
-        }},
-        {{
-            "step": 2,
-            "action": "answer",
-            "arguments": {{}}
-        }}
-    ]
-}}
-
-For:
-
-"Search my PDF for decision trees"
-
-Return:
-
-{{
-    "tasks": [
-        {{
-            "step": 1,
-            "action": "search_pdf",
-            "arguments": {{
-                "query": "decision trees"
-            }}
-        }},
-        {{
-            "step": 2,
-            "action": "answer",
-            "arguments": {{}}
-        }}
-    ]
-}}
+You are the planning system of FRIDAY,
+a personal AI computer agent.
 
 User request:
 
-{user_input}
+{user_request}
+
+Break the request into the smallest
+reasonable sequence of actions.
+
+Available actions include:
+
+open_application
+open_website
+search_web
+type_text
+press_key
+click_mouse
+scroll
+
+add
+subtract
+multiply
+divide
+
+search_pdf
+
+create_folder
+create_file
+read_file
+rename_path
+move_path
+
+Rules:
+
+1. Create only the steps necessary to
+   complete the user's request.
+
+2. Each step must contain exactly:
+   - step
+   - action
+   - arguments
+
+3. Use the exact action names listed above.
+
+4. Use appropriate argument names.
+
+5. Do not execute anything.
+
+6. Return ONLY valid JSON.
+
+Format:
+
+{{
+    "tasks": [
+        {{
+            "step": 1,
+            "action": "action_name",
+            "arguments": {{}}
+        }}
+    ]
+}}
+
+Do not use Markdown.
+Do not include explanations.
 """
 
     response = client.models.generate_content(
@@ -112,13 +95,43 @@ User request:
         contents=prompt
     )
 
+    text = response.text.strip()
+
+    # ======================================
+    # Remove Markdown fences
+    # ======================================
+
+    if text.startswith("```"):
+
+        text = text.replace(
+            "```json",
+            ""
+        )
+
+        text = text.replace(
+            "```",
+            ""
+        )
+
+        text = text.strip()
+
+    # ======================================
+    # Parse JSON
+    # ======================================
+
     try:
 
-        return json.loads(response.text)
+        plan = json.loads(text)
+
+        return plan
 
     except json.JSONDecodeError:
 
-        print("Planner returned invalid JSON.")
+        print(
+            "\n❌ Planner returned invalid JSON:"
+        )
+
+        print(text)
 
         return {
             "tasks": []
